@@ -10,14 +10,23 @@ Aptfile file is mandatory, create a file called Aptfile in your project root fol
 		`unixodbc
 		unixodbc-dev https://packages.microsoft.com/ubuntu/22.04/prod/pool/main/m/msodbcsql18/msodbcsql18_18.3.2.1-1_arm64.deb`
 - ODBC Driver 18 for SQL Server (Ubuntu 20.04)
-		`unixodbc
-		unixodbc-dev https://packages.microsoft.com/ubuntu/20.04/prod/pool/main/m/msodbcsql18/msodbcsql18_18.3.2.1-1_arm64.deb`
+```
+unixodbc
+unixodbc-dev
+https://packages.microsoft.com/ubuntu/20.04/prod/pool/main/m/msodbcsql18/msodbcsql18_18.3.2.1-1_arm64.deb
+```
 - ODBC Driver 17 for SQL Server (Ubuntu 22.04)
-		`unixodbc
-		unixodbc-dev https://packages.microsoft.com/ubuntu/22.04/prod/pool/main/m/msodbcsql17/msodbcsql17_17.10.5.1-1_amd64.deb`
+```
+unixodbc
+unixodbc-dev
+https://packages.microsoft.com/ubuntu/22.04/prod/pool/main/m/msodbcsql17/msodbcsql17_17.10.5.1-1_amd64.deb
+```
 - ODBC Driver 17 for SQL Server (Ubuntu 20.04)
-		`unixodbc
-		unixodbc-dev	https://packages.microsoft.com/ubuntu/20.04/prod/pool/main/m/msodbcsql17/msodbcsql17_17.9.1.1-1_amd64.deb`
+```
+unixodbc
+unixodbc-dev
+https://packages.microsoft.com/ubuntu/20.04/prod/pool/main/m/msodbcsql17/msodbcsql17_17.9.1.1-1_amd64.deb
+```
 			
 ## Now deploy
 ```
