@@ -33,7 +33,48 @@ unixodbc
 unixodbc-dev
 https://packages.microsoft.com/ubuntu/20.04/prod/pool/main/m/msodbcsql17/msodbcsql17_17.9.1.1-1_amd64.deb
 ```
-			
+
+## Default Database Configuration With ODBC Driver 18 in settings.py
+```
+DATABASES = {
+       "default": {
+             "ENGINE" : "mssql",
+             "NAME": "dbname",
+             "HOST" : "server_url/ip",
+             "PORT" : "1433",
+             "USER": "user_id",
+             "PASSWORD": "password",
+             "Trusted_Connection": "yes",
+             "OPTIONS": {
+			    "driver": "ODBC Driver 18 for SQL Server"
+		     }
+	    }
+    }
+```
+
+## Sample Code To Query Data From views.py
+```
+from django.shortcuts import render
+from django.http import HttpRequest
+from django.db import connections
+
+def index(request):
+	activities = []
+    conn = connections.create_connection('default')
+    cursor = conn.cursor()
+    cursor.execute("SELECT [activityid],[activitydescription],[activityname] FROM [dbo].[activity]")
+    for row in cursor.fetchall():
+        activities.append({"activityid": row[0], "activityname": row[1], "activitydescription": row[2]})
+    conn.close()
+    return render(
+        request,
+        'index.html',
+        {
+            'activities': activities
+        }
+    )
+```
+
 ## Now deploy
 ```
 $ git init
