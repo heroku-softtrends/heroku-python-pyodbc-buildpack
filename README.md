@@ -4,6 +4,16 @@
 - The second buildpack: `https://github.com/heroku/heroku-buildpack-python.git`
 - The last buildpack: `https://github.com/heroku-softtrends/heroku-python-pyodbc-buildpack.git`
 
+## Set Django version minimum from 4.2 and higher in requirement.txt
+```
+django>=4.2,<5.1
+gunicorn>=21.2,<22.0
+dj-database-url>=2.0,<3.0
+whitenoise[brotli]>=6.0,<7.0
+mssql-django
+pyodbc
+```
+
 ## Add Aptfile File
 Aptfile file is mandatory, create a file called Aptfile in your project root folder. The Aptfile should contain the following .deb package names or download urls based on Ubuntu OS version (22.04/20.04) and ODBC Driver Version (18/17):
 - ODBC Driver 18 for SQL Server (Ubuntu 22.04)
