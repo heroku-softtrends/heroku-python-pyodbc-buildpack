@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 arrow() {
   echo '----->' "$@"
 }
@@ -9,23 +8,73 @@ indent() {
   sed -u 's/^/       /'
 }
 
+fail() {
+  arrow "ERROR: $*" | indent
+  exit 1
+}
+
 BUILD_DIR=$1
 
-# Get microsoft ODBC diver version
-for f in ${BUILD_DIR}/.apt/opt/microsoft/*; do 
-	MS_ODBC_VERSION=$(echo "$(basename $f)" | grep -o -E '[0-9]+')
-	break;
+if [ -z "$BUILD_DIR" ]; then
+  fail "Usage: bin/compile <build-dir> [<cache-dir>] [<env-dir>]"
+fi
+
+# Find a supported driver directory that heroku-buildpack-apt should have
+# installed from the Aptfile. Only msodbcsql17 and msodbcsql18 are
+# supported - anything else (missing Aptfile entry, wrong package name,
+# apt install that silently failed) is a hard error rather than a build
+# that reports success with no driver in place.
+MS_ODBC_DIR=""
+MS_ODBC_VERSION=""
+for version in 18 17; do
+  candidate="${BUILD_DIR}/.apt/opt/microsoft/msodbcsql${version}"
+  if [ -d "$candidate" ]; then
+    MS_ODBC_DIR="$candidate"
+    MS_ODBC_VERSION="$version"
+    break
+  fi
 done
 
+if [ -z "$MS_ODBC_DIR" ]; then
+  fail "No msodbcsql17 or msodbcsql18 directory found under ${BUILD_DIR}/.apt/opt/microsoft/. Add unixodbc, unixodbc-dev, and an msodbcsql17/msodbcsql18 .deb URL to your Aptfile, and make sure heroku-buildpack-apt runs before this buildpack."
+fi
+
 arrow "Starting adding ODBC Driver ${MS_ODBC_VERSION} for SQL Server"
+
+LIB64_DIR="${MS_ODBC_DIR}/lib64"
+RESOURCES_DIR="${MS_ODBC_DIR}/share/resources/en_US"
+
+if [ ! -d "$LIB64_DIR" ]; then
+  fail "${LIB64_DIR} is missing. The msodbcsql${MS_ODBC_VERSION} package looks incomplete - re-check the .deb URL in your Aptfile."
+fi
+
+if [ ! -d "$RESOURCES_DIR" ]; then
+  fail "${RESOURCES_DIR} is missing. The msodbcsql${MS_ODBC_VERSION} package looks incomplete - re-check the .deb URL in your Aptfile."
+fi
+
 mkdir -p "${BUILD_DIR}/.apt/usr/lib/odbc/conf/" | indent
 mkdir -p "${BUILD_DIR}/.apt/usr/share/resources/en_US/" | indent
-cp -a "${BUILD_DIR}/.apt/opt/microsoft/msodbcsql${MS_ODBC_VERSION}/lib64/." "${BUILD_DIR}/.apt/usr/lib/" | indent
+
+cp -a "${LIB64_DIR}/." "${BUILD_DIR}/.apt/usr/lib/" | indent
+
+if [ -z "$(find "${BUILD_DIR}/.apt/usr/lib" -maxdepth 1 -type f -name 'libmsodbcsql-*.so*' -print -quit 2>/dev/null)" ]; then
+  fail "No libmsodbcsql-*.so* file was found in ${BUILD_DIR}/.apt/usr/lib after copying from ${LIB64_DIR} - the driver library was not copied."
+fi
 arrow "copied libmsodbcsql-${MS_ODBC_VERSION}-*"
-cp -a "${BUILD_DIR}/.apt/opt/microsoft/msodbcsql${MS_ODBC_VERSION}/share/resources/en_US/." "${BUILD_DIR}/.apt/usr/share/resources/en_US/" | indent
+
+cp -a "${RESOURCES_DIR}/." "${BUILD_DIR}/.apt/usr/share/resources/en_US/" | indent
+
+if [ ! -f "${BUILD_DIR}/.apt/usr/share/resources/en_US/msodbcsqlr${MS_ODBC_VERSION}.rll" ]; then
+  fail "msodbcsqlr${MS_ODBC_VERSION}.rll was not found in ${BUILD_DIR}/.apt/usr/share/resources/en_US after copying from ${RESOURCES_DIR} - the resource file was not copied."
+fi
 arrow "copied msodbcsqlr${MS_ODBC_VERSION}.rll"
 
 mkdir -p "${BUILD_DIR}/.profile.d" | indent
 cp .profile.d/configure-odbc.sh "${BUILD_DIR}/.profile.d" | indent
+
+if [ ! -f "${BUILD_DIR}/.profile.d/configure-odbc.sh" ]; then
+  fail "${BUILD_DIR}/.profile.d/configure-odbc.sh was not copied."
+fi
 arrow "copied profile.d"
+
 arrow "Finished adding ODBC Driver ${MS_ODBC_VERSION} for SQL Server"
